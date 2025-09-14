@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WMS // Warehouse Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 20px; }
+        .dark ::-webkit-scrollbar-thumb { background-color: #4A5568; }
+
+        /* Keyframe animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+        .pop-in { animation: popIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+    </style>
+    <script>
+        // Set theme immediately
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 font-sans text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    
+    <!-- Decorative Gradient Blobs -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden">
+        <div class="absolute top-[-20%] left-[-10%] w-96 h-96 bg-cyan-300/20 dark:bg-cyan-500/20 rounded-full filter blur-3xl opacity-50 animate-[spin_20s_linear_infinite]"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-indigo-300/20 dark:bg-indigo-500/20 rounded-full filter blur-3xl opacity-50 animate-[spin_25s_linear_infinite_reverse]"></div>
+    </div>
+
+    <!-- Notification Area -->
+    <div id="notification" class="fixed top-5 right-5 w-80 z-50 pointer-events-none"></div>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        <header class="mb-10 flex justify-between items-center">
+            <div class="text-left">
+                <h1 class="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">WMS <span class="text-cyan-500">_</span></h1>
+                <p class="text-slate-500 dark:text-slate-400 mt-1">Warehouse Management System</p>
+            </div>
+            <!-- Theme Toggle -->
+            <button id="theme-toggle" class="p-2 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200">
+                <svg id="theme-toggle-dark-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-toggle-light-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Form Section -->
+            <section class="lg:col-span-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl transition-all duration-300 p-6">
+                <h2 class="text-2xl font-semibold mb-5 text-slate-800 dark:text-white flex items-center gap-3">
+                    <svg class="w-6 h-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span>Tambah Item</span>
+                </h2>
+                <form id="addItemForm" class="space-y-4">
+                    <input type="text" name="id" required class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 focus:border-cyan-400 focus:ring focus:ring-cyan-300/50 rounded-lg p-3 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 outline-none shadow-inner" placeholder="ID Item (e.g., A001)">
+                    <input type="text" name="name" required class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 focus:border-cyan-400 focus:ring focus:ring-cyan-300/50 rounded-lg p-3 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 outline-none shadow-inner" placeholder="Nama Item (e.g., CPU Cooler)">
+                    <input type="number" name="quantity" required class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 focus:border-cyan-400 focus:ring focus:ring-cyan-300/50 rounded-lg p-3 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 outline-none shadow-inner" placeholder="Kuantitas (e.g., 50)" min="0">
+                    <textarea name="description" rows="3" class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 focus:border-cyan-400 focus:ring focus:ring-cyan-300/50 rounded-lg p-3 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 outline-none shadow-inner" placeholder="Deskripsi (e.g., Liquid CPU Cooler 240mm)"></textarea>
+                    <button type="submit" class="!mt-6 w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3 px-4 rounded-lg font-bold hover:from-cyan-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 dark:focus:ring-offset-slate-900 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40">
+                        Tambahkan ke Inventaris
+                    </button>
+                </form>
+            </section>
+
+            <!-- Item List Section -->
+            <section class="lg:col-span-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl transition-all duration-300 p-6">
+                <h2 class="text-2xl font-semibold mb-5 text-slate-800 dark:text-white flex items-center gap-3">
+                     <svg class="w-6 h-6 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                    <span>Daftar Inventaris</span>
+                </h2>
+                <div id="itemList" class="space-y-3">
+                    <!-- Skeleton Loader -->
+                    <div class="space-y-3 animate-pulse">
+                        <div class="h-20 bg-slate-200 dark:bg-slate-700/50 rounded-lg"></div>
+                        <div class="h-20 bg-slate-200 dark:bg-slate-700/50 rounded-lg"></div>
+                        <div class="h-20 bg-slate-200 dark:bg-slate-700/50 rounded-lg"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Update Modal -->
+    <div id="updateModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-40 opacity-0 pointer-events-none transition-opacity duration-300">
+      <div id="updateModalContent" class="relative p-6 w-full max-w-md rounded-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 transition-all duration-300 transform scale-95">
+        <div class="text-center">
+          <h3 class="text-xl leading-6 font-bold text-slate-900 dark:text-white">Perbarui Kuantitas</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1" id="updateItemName">Nama Item</p>
+          <div class="mt-4">
+             <input type="number" id="newQuantity" class="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-300 dark:border-slate-700 focus:border-cyan-400 focus:ring focus:ring-cyan-300/50 rounded-lg p-3 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 outline-none shadow-inner text-center text-lg" placeholder="Kuantitas baru" min="0">
+             <input type="hidden" id="updateItemId">
+          </div>
+          <div class="flex gap-3 mt-5">
+            <button id="cancelUpdate" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 rounded-lg py-2.5 font-semibold transition">Batal</button>
+            <button id="confirmUpdate" class="w-full inline-flex justify-center items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3 px-4 rounded-lg font-bold hover:from-cyan-600 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 dark:focus:ring-offset-slate-900 transition-all duration-300 transform hover:-translate-y-1 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40">Simpan</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api/items';
+        let itemsCache = [];
+
+        // --- Theme Management ---
+        const themeToggle = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-toggle-dark-icon');
+        const lightIcon = document.getElementById('theme-toggle-light-icon');
+        
+        const applyTheme = (isDark) => {
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                darkIcon.classList.remove('hidden');
+                lightIcon.classList.add('hidden');
+                localStorage.theme = 'dark';
+            } else {
+                document.documentElement.classList.remove('dark');
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
+                localStorage.theme = 'light';
+            }
+        };
+        
+        themeToggle.addEventListener('click', () => {
+            applyTheme(!document.documentElement.classList.contains('dark'));
+        });
+
+        // --- DOM Elements ---
+        const itemListEl = document.getElementById('itemList');
+        const addItemForm = document.getElementById('addItemForm');
+        const notificationEl = document.getElementById('notification');
+        const updateModal = document.getElementById('updateModal');
+        const updateModalContent = document.getElementById('updateModalContent');
+        const updateItemNameEl = document.getElementById('updateItemName');
+        const newQuantityInput = document.getElementById('newQuantity');
+        const updateItemIdInput = document.getElementById('updateItemId');
+        const confirmUpdateButton = document.getElementById('confirmUpdate');
+        const cancelUpdateButton = document.getElementById('cancelUpdate');
+        
+        // --- Notifications ---
+        function showNotification(message, isError = false) {
+            const notifId = `notif-${Date.now()}`;
+            const notifDiv = document.createElement('div');
+            notifDiv.className = `p-4 rounded-lg shadow-lg text-white mb-3 text-sm font-semibold border-2 ${isError ? 'bg-red-500 border-red-400' : 'bg-green-500 border-green-400'} fade-in`;
+            notifDiv.innerHTML = `<p>${message}</p>`;
+            notificationEl.prepend(notifDiv);
+            
+            setTimeout(() => {
+                notifDiv.style.opacity = '0';
+                notifDiv.style.transform = 'translateX(20px)';
+                notifDiv.style.transition = 'all 0.3s ease';
+                notifDiv.addEventListener('transitionend', () => notifDiv.remove());
+            }, 4000);
+        }
+
+        // --- API & Rendering ---
+        async function fetchItems() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error(`Network response error (${response.status})`);
+                const items = await response.json();
+                itemsCache = items;
+                renderItems(items);
+            } catch (error) {
+                console.error('Fetch error:', error);
+                itemListEl.innerHTML = `<div class="text-center p-8 bg-red-500/10 border border-red-500/20 rounded-lg"><h3 class="font-bold text-red-400">Gagal Memuat Data</h3><p class="text-red-400/80 text-sm mt-1">Pastikan backend server berjalan.</p></div>`;
+                showNotification('Gagal memuat data dari server.', true);
+            }
+        }
+        
+        function renderItems(items) {
+            itemListEl.innerHTML = '';
+            if (items.length === 0) {
+                itemListEl.innerHTML = `<div class="text-center p-8 bg-slate-400/10 border border-slate-400/20 rounded-lg"><h3 class="font-bold text-slate-600 dark:text-slate-300">Gudang Kosong</h3><p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Tambahkan item baru untuk memulai.</p></div>`;
+                return;
+            }
+
+            items.sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center gap-4 transition-all duration-200 hover:shadow-xl hover:border-cyan-500 hover:scale-[1.02] dark:hover:border-cyan-500';
+                itemEl.innerHTML = `
+                    <div class="flex-grow">
+                        <h3 class="font-semibold text-slate-800 dark:text-white">${item.name} <span class="text-xs font-mono text-slate-400 dark:text-slate-500">${item.id}</span></h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">${item.description}</p>
+                    </div>
+                    <div class="text-center px-4 flex-shrink-0">
+                        <p class="font-bold text-2xl text-cyan-500">${item.quantity}</p>
+                        <p class="text-xs text-slate-400">Kuantitas</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openUpdateModal('${item.id}')" class="p-2 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z" /></svg></button>
+                        <button onclick="deleteItem('${item.id}', '${item.name}')" class="p-2 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 transition"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                    </div>
+                `;
+                itemListEl.appendChild(itemEl);
+            });
+        }
+        
+        async function handleAddItem(event) {
+            event.preventDefault();
+            const formData = new FormData(addItemForm);
+            const item = Object.fromEntries(formData.entries());
+            item.quantity = parseInt(item.quantity, 10);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(item)
+                });
+                if (response.ok) {
+                    showNotification(`Item "${item.name}" berhasil ditambahkan!`);
+                    addItemForm.reset();
+                    fetchItems();
+                } else {
+                    const errorText = response.status === 409 ? `Item dengan ID "${item.id}" sudah ada.` : 'Gagal menambahkan item.';
+                    throw new Error(errorText);
+                }
+            } catch (error) {
+                showNotification(error.message, true);
+            }
+        }
+
+        async function deleteItem(id, name) {
+            if (!confirm(`Hapus item "${name}" (ID: ${id})?`)) return;
+            try {
+                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showNotification(`Item "${name}" berhasil dihapus.`);
+                    fetchItems();
+                } else throw new Error('Gagal menghapus item.');
+            } catch (error) {
+                showNotification(error.message, true);
+            }
+        }
+        
+        function openUpdateModal(id) {
+            const item = itemsCache.find(i => i.id === id);
+            if (!item) return;
+            updateItemIdInput.value = id;
+            updateItemNameEl.textContent = item.name;
+            newQuantityInput.value = item.quantity;
+            updateModal.classList.remove('opacity-0', 'pointer-events-none');
+            updateModalContent.classList.remove('scale-95');
+            newQuantityInput.focus();
+        }
+
+        function closeUpdateModal() {
+            updateModal.classList.add('opacity-0', 'pointer-events-none');
+            updateModalContent.classList.add('scale-95');
+        }
+
+        async function handleUpdateQuantity() {
+            const id = updateItemIdInput.value;
+            const quantity = parseInt(newQuantityInput.value, 10);
+            if (isNaN(quantity) || quantity < 0) {
+                showNotification('Kuantitas harus berupa angka non-negatif.', true);
+                return;
+            }
+            try {
+                 const response = await fetch(`${API_URL}/${id}/quantity`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity })
+                });
+                if (response.ok) {
+                    const updatedItem = await response.json();
+                    showNotification(`Kuantitas untuk "${updatedItem.name}" diperbarui.`);
+                    closeUpdateModal();
+                    fetchItems();
+                } else throw new Error('Gagal memperbarui kuantitas.');
+            } catch (error) {
+                showNotification(error.message, true);
+            }
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(document.documentElement.classList.contains('dark'));
+            fetchItems();
+        });
+        addItemForm.addEventListener('submit', handleAddItem);
+        confirmUpdateButton.addEventListener('click', handleUpdateQuantity);
+        cancelUpdateButton.addEventListener('click', closeUpdateModal);
+        updateModal.addEventListener('click', (e) => {
+            if (e.target === updateModal) closeUpdateModal();
+        });
+    </script>
+</body>
+</html>
+
